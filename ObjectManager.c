@@ -1,4 +1,13 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+
 #include "ObjectManager.h"
+
+unsigned char *buffer1;
+unsigned char *buffer2;
+
+unsigned char *bufferCurr;
 
 Ref insertObject( ulong size ){
     //Request a block of memory of given size from the object manager
@@ -28,6 +37,6 @@ void dumpPool(){
     //Print (to stdout) info about each object that is currently allocated including its id, start address, and size
 }
 
-void compact(){
+static void compact(){
     //Initiate garbage collection
 }

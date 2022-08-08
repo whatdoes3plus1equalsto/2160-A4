@@ -4,10 +4,32 @@
 
 #include "ObjectManager.h"
 
-unsigned char *buffer1;
-unsigned char *buffer2;
+static unsigned char *buffer1;  //double buffer
+static unsigned char *buffer2;  //double buffer
 
-unsigned char *bufferCurr;
+static unsigned char *bufferCurr; //the buffer in use
+
+typedef struct NODE{
+    //storing object data
+    int numBytes;   //size
+    int startAddr;  //starting address in the buffer
+    int ref;    //id
+    int count;  //times being called
+    Node *next; //next node
+}Node;
+
+static Node *root = NULL; //the top of the linked list
+
+static int freePtr; //point to the insert address
+
+static int numOfBlocks; //number of blocks
+
+static void validate(){
+    //invarient
+    #ifndef NDEBUG
+
+    #endif
+}
 
 Ref insertObject( ulong size ){
     //Request a block of memory of given size from the object manager

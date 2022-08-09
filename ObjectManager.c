@@ -48,8 +48,9 @@ Ref insertObject( ulong size ){
 
     //precondition
     validate();
-    assert(size >= 0);
+
     if(size < 0){
+        //negative size
         printf("The size should be a positive integer");
 
         return NULL_REF;
@@ -89,6 +90,7 @@ Ref insertObject( ulong size ){
                 Node *prev = NULL;   //iterator
 
                 while(curr != NULL){
+                    //loop to the last object
                     prev = curr;
                     curr = curr->next;
                 }
@@ -102,8 +104,10 @@ Ref insertObject( ulong size ){
             }   
             
         }else{
+            //no space available even compacted
             printf("No space available for inserting this object\n");
             printf("The space required: %lu\nThe space available: %lu\n", size, MEMORY_SIZE-insertPtr);
+            
             //postcondition
             validate();
 
@@ -117,12 +121,49 @@ Ref insertObject( ulong size ){
 
         return NULL_REF;
     }
-}
+}//end of insertObject
 
 void *retrieveObject( Ref ref ){
     //Retrieve the address of an object, identified by the reference id
-    return NULL;
-}
+    
+    //precondition
+    validate();
+
+    if(head != NULL){
+        //search for object using ref
+        assert(head != NULL);
+        
+        Node *curr = head;  //iterator
+        
+        while(curr->ref != ref && curr->next != NULL){
+            //finding the object
+            curr = curr->next;
+        }
+
+        if(curr->ref == ref){
+            //postcondition
+            validate();
+
+            return &bufferCurr[curr->startAddr];
+        }else{
+            printf("The object does not exist or been deleted\n");
+
+            //postcondition
+            validate();
+
+            return NULL;
+        }
+
+    }else{
+        //list empty case
+        printf("The buffer is empty, nothing to retrieve.\n");
+
+        //postcondition
+        validate();
+
+        return NULL;
+    }
+}//end of retrieveObject
 
 void addReference( Ref ref ){
     //Increment the reference count for the object with reference id

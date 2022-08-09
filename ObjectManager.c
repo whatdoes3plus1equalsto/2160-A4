@@ -282,9 +282,10 @@ void dumpPool(){
     validate();
 
     Node *curr = head; //iterator
+    printf("Objects info\n");
 
     while(curr != NULL){
-        printf("ID: %lu StartAddress: %lu Size: %lu\n",curr->ref,curr->startAddr,curr->numBytes);
+        printf("ID: %lu StartAddress: %lu Size: %lu Count: %d\n",curr->ref,curr->startAddr,curr->numBytes,curr->count);
         curr = curr->next;
     }
 

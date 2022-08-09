@@ -167,7 +167,36 @@ void *retrieveObject( Ref ref ){
 
 void addReference( Ref ref ){
     //Increment the reference count for the object with reference id
-}
+    
+    //precondition
+    validate();
+
+    if(head != NULL){
+
+        assert(head != NULL);
+
+        Node *curr = head;  //iterator
+
+        while(curr->ref != ref && curr->next != NULL){
+            //finding the object using reference
+            curr = curr->next;
+        }
+
+        if(curr->ref == ref){
+            //add reference
+            curr->count++;
+        }else{
+            printf("The reference is not found, failed to add reference\n");
+        }
+
+    }else{
+        //empty buffer case
+        printf("The buffer is empty, failed to add reference\n");
+    }
+
+    //postcondition
+    validate();
+}//end of addReference
 
 void dropReference( Ref ref ){
     //Decrement the reference count for the object with reference id

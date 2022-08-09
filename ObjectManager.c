@@ -1,4 +1,4 @@
-#include <stdio.h>
+ #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -49,7 +49,7 @@ Ref insertObject( ulong size ){
     //precondition
     validate();
 
-    if(size < 0){
+    if(size <= 0){
         //negative size
         printf("The size should be a positive integer");
 
@@ -254,8 +254,40 @@ void initPool(){
 
 void destroyPool(){
     //Clean up the object manager upon quitting
+
+    //precondition
+    validate();
+
+    Node *curr = head; //iterator
+
+    while(curr != NULL){
+        //clean up every object node
+        head = head->next;
+        free(curr);
+        curr = head;
+        numOfBlocks--;
+    }
+
+    //postcondition
+    validate();
+
+    bufferCurr = NULL;
+    free(buffer1);
+    free(buffer2);
 }
 
 void dumpPool(){
     //Print (to stdout) info about each object that is currently allocated including its id, start address, and size
+    //precondition
+    validate();
+
+    Node *curr = head; //iterator
+
+    while(curr != NULL){
+        printf("ID: %lu StartAddress: %lu Size: %lu\n",curr->ref,curr->startAddr,curr->numBytes);
+        curr = curr->next;
+    }
+
+    //postcondition
+    validate();
 }

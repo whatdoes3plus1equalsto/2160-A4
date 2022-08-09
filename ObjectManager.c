@@ -10,7 +10,9 @@ static uchar *buffer2;  //double buffer
 
 static uchar *bufferCurr; //point to the buffer in use
 
-typedef struct NODE{ //storing object data
+typedef struct NODE Node;
+
+struct NODE{ //storing object data
 
     ulong numBytes;   //size of object
     ulong startAddr;  //starting address in the buffer
@@ -18,13 +20,13 @@ typedef struct NODE{ //storing object data
     int count;  //times being called
     Node *next; //next node
 
-}Node;
+};
 
 static Node *head; //the top of the linked list
 
 static ulong insertPtr; //point to the insert address
 
-static int numOfBlocks; //number of blocks
+static Ref numOfBlocks; //number of blocks
 
 static void validate(){ 
     //invarient
@@ -57,29 +59,29 @@ Ref insertObject( ulong size ){
         if(insertPtr + size > MEMORY_SIZE){
 
             //invarient
-            assert(insertObject > 0);
+            assert(insertPtr > 0);
 
             //run garbage collector
             compact();
         }
-
+        
         if(insertPtr + size <= MEMORY_SIZE){
             //making the object Node
-            Node *newNode = NULL;
+            Node *newNode = (Node *)malloc(sizeof(Node));
             newNode->ref = numOfBlocks++;
             newNode->count = 1;
             newNode->numBytes = size;
             newNode->startAddr = insertPtr;
             newNode->next = NULL;
             insertPtr += size;
-
+            
             if(head == NULL){
                 //if the list is empty
                 head = newNode;
 
                 //postcondition
                 validate();
-
+                
                 return newNode->ref;
             }else{
                 //if the list isnt empty
@@ -95,13 +97,13 @@ Ref insertObject( ulong size ){
 
                 //postcondition
                 validate();
-
+                
                 return newNode->ref;
             }   
             
         }else{
             printf("No space available for inserting this object\n");
-            printf("The space required: %d\nThe space available: %d\n", size, MEMORY_SIZE-insertPtr);
+            printf("The space required: %lu\nThe space available: %lu\n", size, MEMORY_SIZE-insertPtr);
             //postcondition
             validate();
 
@@ -119,6 +121,7 @@ Ref insertObject( ulong size ){
 
 void *retrieveObject( Ref ref ){
     //Retrieve the address of an object, identified by the reference id
+    return NULL;
 }
 
 void addReference( Ref ref ){

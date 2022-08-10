@@ -62,7 +62,7 @@ static void compact(){
         newInsertPtr += curr->numBytes;
         curr = curr->next;
     }
-    bufferCurr = newInsertPtr;
+    bufferCurr = nextBuffer;
     insertPtr = newInsertPtr;
 
     printf("Garbage collector statistics:\n");

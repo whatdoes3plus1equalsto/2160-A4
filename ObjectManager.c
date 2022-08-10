@@ -37,6 +37,26 @@ static ulong bytesInuse;
 static void validate(){ 
     //invarient
     #ifndef NDEBUG
+    //bytes is in th size
+    assert(bytesInuse <= MEMORY_SIZE && bytesInuse >= 0);
+    //0 is reserved for NULL_REF
+    assert(nextRef > 0);
+    //check null
+    if(numOfBlocks == 0){
+        assert(head == NULL);
+    }else{
+        int counter = 0;
+        Node *curr = head;
+        while(curr != NULL){
+            counter ++;
+            curr = curr->next;
+        }
+        assert(curr->next == NULL);
+        //check number of blocks
+        assert(numOfBlocks == counter);
+        //check insert Point
+        assert(insertPtr == (curr->startAddr+curr->numBytes));
+    }
 
     #endif
 }

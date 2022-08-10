@@ -1,8 +1,8 @@
-main: ObjectManager.o main0.o
-	clang++ -Wall main0.o ObjectManager.o -o main
+main: ObjectManager.o main.o
+	clang++ -Wall main.o ObjectManager.o -o main
 ObjectManager.o: ObjectManager.c ObjectManager.h
 	clang++ -Wall -c ObjectManager.c -o ObjectManager.o
-main0.o: main0.c
-	clang++ -Wall -c main0.c -o main0.o
+main.o: main1.c
+	clang++ -Wall -c main1.c -o main.o
 clean:
 	rm -fr *.o main

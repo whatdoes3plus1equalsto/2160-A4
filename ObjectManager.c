@@ -210,10 +210,12 @@ void dropReference( Ref ref ){
 
             assert(head != NULL);
 
+            Node *prev = NULL;  //iterator
             Node *curr = head;  //iterator
 
             while(curr->ref != ref && curr->next != NULL){
                 //finding the object using reference
+                prev = curr;
                 curr = curr->next;
             }
 
@@ -221,6 +223,10 @@ void dropReference( Ref ref ){
                 //drop reference
                 if(curr->count > 0){
                 curr->count--;
+                }
+                if(curr->count == 0){
+                    prev->next = curr->next;
+                    free(curr);
                 }
             }else{
                 printf("The reference is not found, failed to drop reference\n");

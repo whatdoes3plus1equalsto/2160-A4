@@ -47,7 +47,6 @@ static void compact(){
     validate();
 
     uchar *nextBuffer;
-    ulong prevEnd = 0;
     ulong newInsertPtr = 0;
     Node *curr = head;  //iterator
 
@@ -57,11 +56,12 @@ static void compact(){
         nextBuffer = buffer1;
     }
 
-    while(curr->next != NULL){
+    while(curr != NULL){
         memcpy(nextBuffer + newInsertPtr, bufferCurr + curr->startAddr, curr->numBytes);
         newInsertPtr += curr->numBytes;
         curr = curr->next;
     }
+    memset(bufferCurr, MEMORY_SIZE, '0');
     bufferCurr = nextBuffer;
     insertPtr = newInsertPtr;
 
@@ -90,7 +90,7 @@ Ref insertObject( ulong size ){
     }
     
     if(size <= MEMORY_SIZE){
-        if(insertPtr + size > MEMORY_SIZE){
+        if(bytesInuse + size > MEMORY_SIZE){
 
             //invarient
             assert(insertPtr > 0);
@@ -99,7 +99,7 @@ Ref insertObject( ulong size ){
             compact();
         }
         
-        if(insertPtr + size <= MEMORY_SIZE){
+        if(bytesInuse + size <= MEMORY_SIZE){
             //making the object Node
             Node *newNode = (Node *)malloc(sizeof(Node));
             newNode->ref = nextRef++;
@@ -140,8 +140,7 @@ Ref insertObject( ulong size ){
             
         }else{
             //no space available even compacted
-            printf("No space available for inserting this object\n");
-            printf("The space required: %lu\nThe space available: %lu\n", size, MEMORY_SIZE-insertPtr);
+            printf("Unable to successfully complete memory allocation request.\n");
             
             //postcondition
             validate();
@@ -226,10 +225,10 @@ void addReference( Ref ref ){
 
         }else{
             //empty buffer case
-            printf("The buffer is empty, failed to add reference\n");
+            printf("The buffer is empty, failed to add reference\n");   //delete
         }
     }else{
-        printf("NULL reference spotted, failed to add reference\n");
+        printf("NULL reference spotted, failed to add reference\n");    //delete
     }
     //postcondition
     validate();
@@ -269,6 +268,7 @@ void dropReference( Ref ref ){
                     numOfBlocks--;
                     bytesReleased += curr->numBytes;
                     bytesInuse -= curr->numBytes;
+                    printf("272\n"); //delete
                     free(curr);
                 }
             }else{
@@ -277,10 +277,10 @@ void dropReference( Ref ref ){
 
         }else{
             //empty buffer case
-            printf("The buffer is empty, failed to drop reference\n");
+            printf("The buffer is empty, failed to drop reference\n"); //delete
         }
     }else{
-        printf("NULL reference spotted, failed to drop reference\n");
+        printf("NULL reference spotted, failed to drop reference\n"); //delete
     }
     //postcondition
     validate();
@@ -298,8 +298,6 @@ void initPool(){
     buffer2 = (uchar *)malloc(sizeof(MEMORY_SIZE));
     bufferCurr = buffer1;
 
-    printf("\nSize of the buffer:  %d\n", MEMORY_SIZE);
-
     //postcondition
     validate();
 }
@@ -315,6 +313,7 @@ void destroyPool(){
     while(curr != NULL){
         //clean up every object node
         head = head->next;
+        printf("316\n"); //delete
         free(curr);
         curr = head;
         numOfBlocks--;
@@ -324,7 +323,9 @@ void destroyPool(){
     validate();
 
     bufferCurr = NULL;
+    printf("325\n"); //delete
     free(buffer1);
+    printf("326\n"); //delete
     free(buffer2);
 }
 

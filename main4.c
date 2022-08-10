@@ -21,9 +21,9 @@ void tester()
 
   test->value1 = 456;
   test->value2 = 999;
-
+  
   sub_tester( test );
-
+  
   fprintf( stderr, "Is this right? %d %d\n", test->value1, test->value2 );
 }
 

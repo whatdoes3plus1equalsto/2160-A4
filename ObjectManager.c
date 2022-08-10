@@ -180,7 +180,7 @@ void *retrieveObject( Ref ref ){
 
             return &bufferCurr[curr->startAddr];
         }else{
-            printf("Invalid reference exception with reference 0, terminating process.\n");
+            printf("Invalid reference exception with reference %lu, terminating process.\n", ref);
 
             //postcondition
             validate();
@@ -190,7 +190,7 @@ void *retrieveObject( Ref ref ){
 
     }else{
         //list empty case
-        printf("The buffer is empty, nothing to retrieve.\n");
+        printf("Invalid reference exception with reference %lu, terminating process.\n", ref);
 
         //postcondition
         validate();
@@ -268,7 +268,7 @@ void dropReference( Ref ref ){
                     numOfBlocks--;
                     bytesReleased += curr->numBytes;
                     bytesInuse -= curr->numBytes;
-                    printf("*272\n"); //delete
+                    //printf("*272\n"); //delete
                     free(curr);
                 }
             }else{
@@ -323,9 +323,9 @@ void destroyPool(){
     validate();
 
     bufferCurr = NULL;
-    printf("*325\n"); //delete
+    printf("**325\n"); //delete
     free(buffer1);
-    printf("*326\n"); //delete
+    printf("**326\n"); //delete
     free(buffer2);
 }
 

@@ -65,8 +65,8 @@ static void compact(){
     bufferCurr = nextBuffer;
     insertPtr = newInsertPtr;
 
-    printf("Garbage collector statistics:\n");
-    printf("objects: %d   bytes in use: %lu   freed: %lu\n", numOfBlocks, bytesInuse, bytesReleased);
+    printf("\nGarbage collector statistics:\n");
+    printf("objects: %d   bytes in use: %lu   freed: %lu\n\n", numOfBlocks, bytesInuse, bytesReleased);
 
     bytesReleased = 0;
     //postcondition
@@ -180,7 +180,7 @@ void *retrieveObject( Ref ref ){
 
             return &bufferCurr[curr->startAddr];
         }else{
-            printf("The object does not exist or been deleted\n");
+            printf("Invalid reference exception with reference 0, terminating process.\n");
 
             //postcondition
             validate();
@@ -268,7 +268,7 @@ void dropReference( Ref ref ){
                     numOfBlocks--;
                     bytesReleased += curr->numBytes;
                     bytesInuse -= curr->numBytes;
-                    printf("272\n"); //delete
+                    printf("*272\n"); //delete
                     free(curr);
                 }
             }else{
@@ -313,7 +313,7 @@ void destroyPool(){
     while(curr != NULL){
         //clean up every object node
         head = head->next;
-        printf("316\n"); //delete
+        printf("*316\n"); //delete
         free(curr);
         curr = head;
         numOfBlocks--;
@@ -323,9 +323,9 @@ void destroyPool(){
     validate();
 
     bufferCurr = NULL;
-    printf("325\n"); //delete
+    printf("*325\n"); //delete
     free(buffer1);
-    printf("326\n"); //delete
+    printf("*326\n"); //delete
     free(buffer2);
 }
 

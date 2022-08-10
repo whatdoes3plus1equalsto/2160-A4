@@ -1,4 +1,4 @@
- #include <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -26,7 +26,13 @@ static Node *head; //the top of the linked list
 
 static ulong insertPtr; //point to the insert address
 
-static Ref numOfBlocks; //number of blocks
+static int numOfBlocks; //number of blocks in the list
+
+static Ref nextRef; //next reference id to be given
+
+static ulong bytesReleased;
+
+static ulong bytesInuse;
 
 static void validate(){ 
     //invarient
@@ -37,7 +43,34 @@ static void validate(){
 
 static void compact(){
     //Initiate garbage collection
+    //precondition
+    validate();
 
+    uchar *nextBuffer;
+    ulong prevEnd = 0;
+    ulong newInsertPtr = 0;
+    Node *curr = head;  //iterator
+
+    if(bufferCurr == buffer1){
+        nextBuffer = buffer2;
+    }else{
+        nextBuffer = buffer1;
+    }
+
+    while(curr->next != NULL){
+        memcpy(nextBuffer + newInsertPtr, bufferCurr + curr->startAddr, curr->numBytes);
+        newInsertPtr += curr->numBytes;
+        curr = curr->next;
+    }
+    bufferCurr = newInsertPtr;
+    insertPtr = newInsertPtr;
+
+    printf("Garbage collector statistics:\n");
+    printf("objects: %d   bytes in use: %lu   freed: %lu\n", numOfBlocks, bytesInuse, bytesReleased);
+
+    bytesReleased = 0;
+    //postcondition
+    validate();
 }
 
 ////Interface////
@@ -69,12 +102,14 @@ Ref insertObject( ulong size ){
         if(insertPtr + size <= MEMORY_SIZE){
             //making the object Node
             Node *newNode = (Node *)malloc(sizeof(Node));
-            newNode->ref = numOfBlocks++;
+            newNode->ref = nextRef++;
             newNode->count = 1;
             newNode->numBytes = size;
             newNode->startAddr = insertPtr;
             newNode->next = NULL;
+            numOfBlocks++;
             insertPtr += size;
+            bytesInuse += newNode->numBytes;
             
             if(head == NULL){
                 //if the list is empty
@@ -151,7 +186,7 @@ void *retrieveObject( Ref ref ){
             //postcondition
             validate();
 
-            return NULL;
+            return NULL_REF;
         }
 
     }else{
@@ -161,7 +196,7 @@ void *retrieveObject( Ref ref ){
         //postcondition
         validate();
 
-        return NULL;
+        return NULL_REF;
     }
 }//end of retrieveObject
 
@@ -225,7 +260,15 @@ void dropReference( Ref ref ){
                 curr->count--;
                 }
                 if(curr->count == 0){
-                    prev->next = curr->next;
+                    //drop and free node if its count is dropped to 0
+                    if(head == curr){
+                        head = curr->next;
+                    }else{
+                        prev->next = curr->next;
+                    }
+                    numOfBlocks--;
+                    bytesReleased += curr->numBytes;
+                    bytesInuse -= curr->numBytes;
                     free(curr);
                 }
             }else{
@@ -245,9 +288,12 @@ void dropReference( Ref ref ){
 
 void initPool(){
     //Initialize the object manager upon starting
-    numOfBlocks = 1;
+    numOfBlocks = 0;
+    nextRef = 1;
     head = NULL;
     insertPtr = 0;
+    bytesReleased = 0;
+    bytesInuse = 0;
     buffer1 = (uchar *)malloc(sizeof(MEMORY_SIZE));
     buffer2 = (uchar *)malloc(sizeof(MEMORY_SIZE));
     bufferCurr = buffer1;

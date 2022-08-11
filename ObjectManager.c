@@ -8,7 +8,7 @@
 static uchar *buffer1;  //double buffer
 static uchar *buffer2;  //double buffer
 
-static void *bufferCurr; //point to the buffer in use
+static uchar *bufferCurr; //point to the buffer in use
 
 typedef struct NODE Node;
 
@@ -37,7 +37,7 @@ static ulong bytesInuse;
 static void validate(){ 
     //invarient
     #ifndef NDEBUG
-    /*
+    
     //bytes is in th size
     assert(bytesInuse <= MEMORY_SIZE && bytesInuse >= 0);
     //0 is reserved for NULL_REF
@@ -53,24 +53,20 @@ static void validate(){
             curr = curr->next;
         }
         
-        printf("test\n"); //delete
         assert(curr->next == NULL);
         //check number of blocks
         assert(numOfBlocks == counter);
     }
-
-    //assert(bufferCurr != NULL);
-    */
     #endif
 }
 
 static void compact(){
+    printf("compact\n"); //delete
     //Initiate garbage collection
     //precondition
     validate();
 
     uchar *nextBuffer;
-    uchar *currBuffer = (uchar *)bufferCurr;
     ulong newInsertPtr = 0;
     Node *curr = head;  //iterator
 
@@ -81,11 +77,11 @@ static void compact(){
     }
 
     while(curr != NULL){
-        memcpy(nextBuffer + newInsertPtr, currBuffer + curr->startAddr, curr->numBytes);
+        memcpy(nextBuffer + newInsertPtr, bufferCurr + curr->startAddr, curr->numBytes);
         newInsertPtr += curr->numBytes;
         curr = curr->next;
     }
-    memset(currBuffer, MEMORY_SIZE, '0');
+    memset(bufferCurr, MEMORY_SIZE, '0');
     bufferCurr = nextBuffer;
     insertPtr = newInsertPtr;
 
@@ -100,6 +96,7 @@ static void compact(){
 ////Interface////
 
 Ref insertObject( ulong size ){
+    printf("insertObject\n"); //delete
     //Request a block of memory of given size from the object manager
     //return the reference to the object inserted
 
@@ -182,6 +179,7 @@ Ref insertObject( ulong size ){
 }//end of insertObject
 
 void *retrieveObject( Ref ref ){
+    printf("retrieveObjecr\n"); //delete
     //Retrieve the address of an object, identified by the reference id
     
     //precondition
@@ -192,7 +190,6 @@ void *retrieveObject( Ref ref ){
         assert(head != NULL);
         
         Node *curr = head;  //iterator
-        uchar *currBuffer = (uchar *)bufferCurr;
         
         while(curr->ref != ref && curr->next != NULL){
             //finding the object
@@ -203,7 +200,7 @@ void *retrieveObject( Ref ref ){
             //postcondition
             validate();
 
-            return &currBuffer[curr->startAddr];
+            return &bufferCurr[curr->startAddr];
         }else{
             printf("Invalid reference exception with reference %lu, terminating process.\n", ref);
 
@@ -225,6 +222,7 @@ void *retrieveObject( Ref ref ){
 }//end of retrieveObject
 
 void addReference( Ref ref ){
+    printf("addReference\n"); //delete
     //Increment the reference count for the object with reference id
     
     //precondition
@@ -260,6 +258,7 @@ void addReference( Ref ref ){
 }//end of addReference
 
 void dropReference( Ref ref ){
+    printf("dropReference\n"); //delete
     //Decrement the reference count for the object with reference id
 
     //precondition
@@ -312,6 +311,7 @@ void dropReference( Ref ref ){
 }//end of dropReference
 
 void initPool(){
+    printf("initPool\n"); //delete
     //Initialize the object manager upon starting
     numOfBlocks = 0;
     nextRef = 1;
@@ -319,8 +319,8 @@ void initPool(){
     insertPtr = 0;
     bytesReleased = 0;
     bytesInuse = 0;
-    buffer1 = (uchar *)malloc(MEMORY_SIZE);
-    buffer2 = (uchar *)malloc(MEMORY_SIZE);
+    buffer1 = (uchar *)malloc(sizeof(MEMORY_SIZE));
+    buffer2 = (uchar *)malloc(sizeof(MEMORY_SIZE));
     bufferCurr = buffer1;
 
     //postcondition
@@ -328,6 +328,7 @@ void initPool(){
 }
 
 void destroyPool(){
+    printf("destroyPool\n"); //delete
     //Clean up the object manager upon quitting
 
     //precondition
@@ -351,6 +352,7 @@ void destroyPool(){
 }
 
 void dumpPool(){
+    printf("dumpPool\n"); //delete
     //Print (to stdout) info about each object that is currently allocated including its id, start address, and size
     //precondition
     validate();

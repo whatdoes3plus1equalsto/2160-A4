@@ -37,6 +37,7 @@ static ulong bytesInuse;
 static void validate(){ 
     //invarient
     #ifndef NDEBUG
+    /*
     //bytes is in th size
     assert(bytesInuse <= MEMORY_SIZE && bytesInuse >= 0);
     //0 is reserved for NULL_REF
@@ -51,11 +52,15 @@ static void validate(){
             counter ++;
             curr = curr->next;
         }
+        
+        printf("test\n"); //delete
         assert(curr->next == NULL);
         //check number of blocks
         assert(numOfBlocks == counter);
     }
 
+    //assert(bufferCurr != NULL);
+    */
     #endif
 }
 
@@ -133,7 +138,7 @@ Ref insertObject( ulong size ){
             if(head == NULL){
                 //if the list is empty
                 head = newNode;
-
+                
                 //postcondition
                 validate();
                 
@@ -329,20 +334,16 @@ void destroyPool(){
     validate();
 
     Node *curr = head; //iterator
-
-    while(curr != NULL){
+    
+    while(head != NULL){
         //clean up every object node
         head = head->next;
         printf("*316\n"); //delete
+        printf("%lu, %lu\n",curr->startAddr,curr->numBytes); //delete
         free(curr);
         curr = head;
-        numOfBlocks--;
     }
 
-    //postcondition
-    validate();
-
-    bufferCurr = NULL;
     printf("**325\n"); //delete
     free(buffer1);
     printf("**326\n"); //delete

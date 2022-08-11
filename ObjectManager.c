@@ -8,7 +8,7 @@
 static uchar *buffer1;  //double buffer
 static uchar *buffer2;  //double buffer
 
-static uchar *bufferCurr; //point to the buffer in use
+static void *bufferCurr; //point to the buffer in use
 
 typedef struct NODE Node;
 
@@ -45,17 +45,15 @@ static void validate(){
     if(numOfBlocks == 0){
         assert(head == NULL);
     }else{
-        int counter = 0;
+        int counter = 1;
         Node *curr = head;
-        while(curr != NULL){
+        while(curr->next != NULL){
             counter ++;
             curr = curr->next;
         }
         assert(curr->next == NULL);
         //check number of blocks
         assert(numOfBlocks == counter);
-        //check insert Point
-        assert(insertPtr == (curr->startAddr+curr->numBytes));
     }
 
     #endif
@@ -67,6 +65,7 @@ static void compact(){
     validate();
 
     uchar *nextBuffer;
+    uchar *currBuffer = (uchar *)bufferCurr;
     ulong newInsertPtr = 0;
     Node *curr = head;  //iterator
 
@@ -77,11 +76,11 @@ static void compact(){
     }
 
     while(curr != NULL){
-        memcpy(nextBuffer + newInsertPtr, bufferCurr + curr->startAddr, curr->numBytes);
+        memcpy(nextBuffer + newInsertPtr, currBuffer + curr->startAddr, curr->numBytes);
         newInsertPtr += curr->numBytes;
         curr = curr->next;
     }
-    memset(bufferCurr, MEMORY_SIZE, '0');
+    memset(currBuffer, MEMORY_SIZE, '0');
     bufferCurr = nextBuffer;
     insertPtr = newInsertPtr;
 
@@ -168,7 +167,7 @@ Ref insertObject( ulong size ){
             return NULL_REF;
         }
     }else{
-        printf("The size requested is way bigger than the size of the buffer\n");
+        printf("Invalid malloc request with size %lu\n",size);
         
         //postcondition
         validate();
@@ -188,6 +187,7 @@ void *retrieveObject( Ref ref ){
         assert(head != NULL);
         
         Node *curr = head;  //iterator
+        uchar *currBuffer = (uchar *)bufferCurr;
         
         while(curr->ref != ref && curr->next != NULL){
             //finding the object
@@ -198,7 +198,7 @@ void *retrieveObject( Ref ref ){
             //postcondition
             validate();
 
-            return &bufferCurr[curr->startAddr];
+            return &currBuffer[curr->startAddr];
         }else{
             printf("Invalid reference exception with reference %lu, terminating process.\n", ref);
 
@@ -314,8 +314,8 @@ void initPool(){
     insertPtr = 0;
     bytesReleased = 0;
     bytesInuse = 0;
-    buffer1 = (uchar *)malloc(sizeof(MEMORY_SIZE));
-    buffer2 = (uchar *)malloc(sizeof(MEMORY_SIZE));
+    buffer1 = (uchar *)malloc(MEMORY_SIZE);
+    buffer2 = (uchar *)malloc(MEMORY_SIZE);
     bufferCurr = buffer1;
 
     //postcondition

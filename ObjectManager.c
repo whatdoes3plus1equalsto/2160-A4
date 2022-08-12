@@ -1,3 +1,12 @@
+//---------------------------------
+//NAME: Man Chun Ng
+//STUDENT NUMBER: 7924340
+//COURSE: COMP2160, SECTION: A01
+//INSTRUCTOR: Dr. Mehdi Niknam
+//ASSIGNMENT: assignment #4, Question #1
+//
+//REMARKS: An impletation of Garbage Collection
+//---------------------------------
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,15 +39,15 @@ static int numOfBlocks; //number of blocks in the list
 
 static Ref nextRef; //next reference id to be given
 
-static ulong bytesReleased;
+static ulong bytesReleased; //released memory
 
-static ulong bytesInuse;
+static ulong bytesInuse;    //number of memory using
 
 static void validate(){ 
     //invarient
     #ifndef NDEBUG
     
-    //bytes is in th size
+    //bytes is in the size
     assert(bytesInuse <= MEMORY_SIZE);
     assert(bytesInuse >= 0);
     //0 is reserved for NULL_REF
@@ -64,40 +73,44 @@ static void validate(){
         assert(numOfBlocks == counter);
     }
     #endif
-}
+}//end of validate
 
 static void compact(){
     //Initiate garbage collection
+    //exchange two buffers
+    
     //precondition
     validate();
 
-    uchar *nextBuffer;
-    ulong newInsertPtr = 0;
+    uchar *nextBuffer;  //next buffer pointer
+    ulong newInsertPtr = 0; //insert in next buffer
     Node *curr = head;  //iterator
 
-    if(bufferCurr == buffer1){
+    if(bufferCurr == buffer1){  //choosing which buffer to-use
         nextBuffer = buffer2;
     }else{
         nextBuffer = buffer1;
     }
 
     while(curr != NULL){
+        //copying the memory to another buffer
         memcpy(nextBuffer + newInsertPtr, bufferCurr + curr->startAddr, curr->numBytes);
         curr->startAddr = newInsertPtr;
         newInsertPtr += curr->numBytes;
         curr = curr->next;
     }
-    bufferCurr = nextBuffer;
-    insertPtr = newInsertPtr;
+    bufferCurr = nextBuffer;    //point to a new buffer
+    insertPtr = newInsertPtr;   //new insert point
 
     printf("\nGarbage collector statistics:\n");
     printf("objects: %d   bytes in use: %lu   freed: %lu\n\n", numOfBlocks, bytesInuse, bytesReleased);
 
-    bytesReleased = 0;
+    bytesReleased = 0;//reset memory released
+
     //postcondition
     validate();
     assert(bufferCurr != NULL);
-}
+}//end of compact
 
 ////Interface////
 
@@ -116,8 +129,9 @@ Ref insertObject( ulong size ){
     }
     
     if(size <= MEMORY_SIZE){
+        //acceptable size
         if(insertPtr + size > MEMORY_SIZE){
-
+            //rearrange buffer
             //invarient
             assert(insertPtr > 0);
 
@@ -324,6 +338,7 @@ void dropReference( Ref ref ){
 
 void initPool(){
     //Initialize the object manager upon starting
+    //setting up every parameters
     numOfBlocks = 0;
     nextRef = 1;
     head = NULL;
@@ -336,7 +351,7 @@ void initPool(){
 
     //postcondition
     validate();
-}
+}//end of initPool
 
 void destroyPool(){
     //Clean up the object manager upon quitting
@@ -364,7 +379,10 @@ void destroyPool(){
     bufferCurr = NULL;
     free(buffer1);
     free(buffer2);
-}
+
+    //postcondition
+    assert(head == NULL);
+}//end of destroyPool
 
 void dumpPool(){
     //Print (to stdout) info about each object that is currently allocated including its id, start address, and size
@@ -381,4 +399,4 @@ void dumpPool(){
 
     //postcondition
     validate();
-}
+}//end of dumpPool

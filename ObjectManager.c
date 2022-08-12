@@ -8,14 +8,14 @@
 static uchar *buffer1;  //double buffer
 static uchar *buffer2;  //double buffer
 
-static uchar *bufferCurr; //point to the buffer in use
+static void *bufferCurr; //point to the buffer in use
 
 typedef struct NODE Node;
 
 struct NODE{ //storing object data
 
-    ulong numBytes;   //size of object
-    ulong startAddr;  //starting address in the buffer
+    int numBytes;   //size of object
+    int startAddr;  //starting address in the buffer
     Ref ref;    //id
     int count;  //times being called
     Node *next; //next node
@@ -24,7 +24,7 @@ struct NODE{ //storing object data
 
 static Node *head; //the top of the linked list
 
-static ulong insertPtr; //point to the insert address
+static int insertPtr; //point to the insert address
 
 static int numOfBlocks; //number of blocks in the list
 
@@ -35,11 +35,13 @@ static ulong bytesReleased;
 static ulong bytesInuse;
 
 static void validate(){ 
+    //printf("validate start\n"); //delete
     //invarient
     #ifndef NDEBUG
     
     //bytes is in th size
-    assert(bytesInuse <= MEMORY_SIZE && bytesInuse >= 0);
+    assert(bytesInuse <= MEMORY_SIZE);
+    assert(bytesInuse >= 0);
     //0 is reserved for NULL_REF
     assert(nextRef > 0);
     //check null
@@ -48,8 +50,13 @@ static void validate(){
     }else{
         int counter = 1;
         Node *curr = head;
+        
+        assert(curr->numBytes <= MEMORY_SIZE);
+        
         while(curr->next != NULL){
             counter ++;
+            //printf("%d\n",curr->numBytes); //delete
+            assert(curr->numBytes <= MEMORY_SIZE);
             curr = curr->next;
         }
         
@@ -58,18 +65,20 @@ static void validate(){
         assert(numOfBlocks == counter);
     }
     #endif
+    //printf("validate end\n"); //delete
 }
 
 static void compact(){
-    printf("compact\n"); //delete
+    printf("compact start\n"); //delete
     //Initiate garbage collection
     //precondition
     validate();
 
+    uchar *currBuffer = (uchar *)bufferCurr;
     uchar *nextBuffer;
-    ulong newInsertPtr = 0;
+    int newInsertPtr = 0;
     Node *curr = head;  //iterator
-
+    assert(curr == head);
     if(bufferCurr == buffer1){
         nextBuffer = buffer2;
     }else{
@@ -77,7 +86,14 @@ static void compact(){
     }
 
     while(curr != NULL){
-        memcpy(nextBuffer + newInsertPtr, bufferCurr + curr->startAddr, curr->numBytes);
+        //printf("%lu\n",curr->ref); //delete
+        assert(curr->count > 0);
+        memcpy(nextBuffer + newInsertPtr, currBuffer + curr->startAddr, curr->numBytes);
+        //nextBuffer[newInsertPtr] = currBuffer[curr->startAddr];
+        //for(int i = 0; i<curr->numBytes; i++){
+            //nextBuffer[newInsertPtr + i] = currBuffer[curr->startAddr + i];
+        //}
+        curr->startAddr = newInsertPtr;
         newInsertPtr += curr->numBytes;
         curr = curr->next;
     }
@@ -91,6 +107,7 @@ static void compact(){
     bytesReleased = 0;
     //postcondition
     validate();
+    printf("compact end\n"); //delete
 }
 
 ////Interface////
@@ -99,18 +116,20 @@ Ref insertObject( ulong size ){
     printf("insertObject\n"); //delete
     //Request a block of memory of given size from the object manager
     //return the reference to the object inserted
-
+    printf("**%lu\n",size);
     //precondition
     validate();
+
+    Node *newNode = (Node *)malloc(sizeof(Node));
 
     if(size <= 0){
         //negative size
         printf("The size should be a positive integer");
-
+        free(newNode);
         return NULL_REF;
     }
     
-    if(size <= MEMORY_SIZE){
+    if(newNode != NULL && size <= MEMORY_SIZE){
         if(bytesInuse + size > MEMORY_SIZE){
 
             //invarient
@@ -119,50 +138,66 @@ Ref insertObject( ulong size ){
             //run garbage collector
             compact();
         }
-        
+
+        Node *curr = head;   //iterator
+        while(curr != NULL && curr->next != NULL){
+            assert(curr != NULL);
+            //loop to the last object
+            curr = curr->next;
+        }
+
+        if(numOfBlocks > 0){
+            assert(curr != NULL);
+        }
+
         if(bytesInuse + size <= MEMORY_SIZE){
             //making the object Node
-            Node *newNode = (Node *)malloc(sizeof(Node));
             newNode->ref = nextRef++;
             newNode->count = 1;
             newNode->numBytes = size;
             newNode->startAddr = insertPtr;
-            newNode->next = NULL;
+            newNode->next = NULL; //delete
             numOfBlocks++;
             insertPtr += size;
-            bytesInuse += newNode->numBytes;
+            bytesInuse += size;
             
-            if(head == NULL){
+            if(curr == NULL){
                 //if the list is empty
                 head = newNode;
                 
                 //postcondition
+                assert(head != NULL);
+                assert(head->next == NULL);
+                assert(head->count == 1);
+                assert(head->numBytes > 0);
+                assert(head->ref == nextRef-1);
+                assert(head->startAddr >= 0);
                 validate();
                 
-                return newNode->ref;
+                return head->ref;
             }else{
                 //if the list isnt empty
-                Node *curr = head;   //iterator
-                Node *prev = NULL;   //iterator
-
-                while(curr != NULL){
-                    //loop to the last object
-                    prev = curr;
-                    curr = curr->next;
-                }
-
-                prev->next = newNode;
-
+                assert(curr != NULL);
+                assert(curr->next == NULL);
+                
+                curr->next = newNode;
+                
                 //postcondition
+                assert(curr->next != NULL);
+                assert(curr->next->next == NULL);
+                assert(curr->next->count == 1);
+                assert(curr->next->numBytes > 0);
+                assert(curr->next->ref == nextRef-1);
+                assert(curr->next->startAddr >= 0);
                 validate();
                 
-                return newNode->ref;
+                return curr->next->ref;
             }   
             
         }else{
             //no space available even compacted
             printf("Unable to successfully complete memory allocation request.\n");
-            
+            free(newNode);
             //postcondition
             validate();
 
@@ -170,7 +205,7 @@ Ref insertObject( ulong size ){
         }
     }else{
         printf("Invalid malloc request with size %lu\n",size);
-        
+        free(newNode);
         //postcondition
         validate();
 
@@ -199,25 +234,27 @@ void *retrieveObject( Ref ref ){
         if(curr->ref == ref){
             //postcondition
             validate();
+            //uchar *currBuffer = (uchar *)bufferCurr; 
+            //return &bufferCurr[curr->startAddr];
+            return (uchar *)((uchar *)bufferCurr + curr->startAddr);
 
-            return &bufferCurr[curr->startAddr];
         }else{
             printf("Invalid reference exception with reference %lu, terminating process.\n", ref);
 
             //postcondition
             validate();
 
-            return NULL_REF;
+            return NULL;
         }
 
     }else{
         //list empty case
-        printf("Invalid reference exception with reference %lu, terminating process.\n", ref);
+        printf("Invalid reference exception with reference %lu in empty list, terminating process.\n", ref);
 
         //postcondition
         validate();
 
-        return NULL_REF;
+        return NULL;
     }
 }//end of retrieveObject
 
@@ -319,8 +356,8 @@ void initPool(){
     insertPtr = 0;
     bytesReleased = 0;
     bytesInuse = 0;
-    buffer1 = (uchar *)malloc(sizeof(MEMORY_SIZE));
-    buffer2 = (uchar *)malloc(sizeof(MEMORY_SIZE));
+    buffer1 = (uchar *)malloc(MEMORY_SIZE);
+    buffer2 = (uchar *)malloc(MEMORY_SIZE);
     bufferCurr = buffer1;
 
     //postcondition
@@ -339,15 +376,22 @@ void destroyPool(){
     while(head != NULL){
         //clean up every object node
         head = head->next;
-        printf("*316\n"); //delete
-        printf("%lu, %lu\n",curr->startAddr,curr->numBytes); //delete
+        //printf("*316\n"); //delete
+        //printf("%d, %d\n",curr->startAddr,curr->numBytes); //delete
         free(curr);
         curr = head;
     }
 
-    printf("**325\n"); //delete
+    numOfBlocks = 0;
+    nextRef = 1;
+    head = NULL;
+    insertPtr = 0;
+    bytesReleased = 0;
+    bytesInuse = 0;
+    bufferCurr = NULL;
+    //printf("**325\n"); //delete
     free(buffer1);
-    printf("**326\n"); //delete
+    //printf("**326\n"); //delete
     free(buffer2);
 }
 
@@ -361,7 +405,7 @@ void dumpPool(){
     printf("Objects info\n");
 
     while(curr != NULL){
-        printf("ID: %lu StartAddress: %lu Size: %lu Count: %d\n",curr->ref,curr->startAddr,curr->numBytes,curr->count);
+        printf("ID: %lu StartAddress: %d Size: %d Count: %d\n",curr->ref,curr->startAddr,curr->numBytes,curr->count);
         curr = curr->next;
     }
 

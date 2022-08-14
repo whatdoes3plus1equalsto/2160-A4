@@ -237,7 +237,7 @@ void *retrieveObject( Ref ref ){
             //postcondition
             validate();
 
-            return NULL_REF;
+            return NULL;
         }
 
     }else{
@@ -247,7 +247,7 @@ void *retrieveObject( Ref ref ){
         //postcondition
         validate();
 
-        return NULL_REF;
+        return NULL;
     }
 }//end of retrieveObject
 

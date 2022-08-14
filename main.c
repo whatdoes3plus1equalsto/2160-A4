@@ -13,27 +13,38 @@
 #include "ObjectManager.h"
 
 void testInitPool();
-void testInsertObject(ulong size, Ref *ptr);
-void testFailInsertObject(ulong size, Ref *ptr);
-void testRetrieveObject(Ref ref, char *ptr);
-void testFailRetrieveObject(Ref ref, char *ptr);
+Ref testInsertObject(ulong size);
+Ref testFailInsertObject(ulong size);
+void *testRetrieveObject(Ref ref);
+void *testFailRetrieveObject(Ref ref);
 void testAddReference(Ref ref);
 void testDropReference(Ref ref);
 void testDestroyPool();
 void testDumpPool();
 
 //counter
-static int testsExecuted = 0;
-static int testsFailed = 0;
+int testsExecuted = 0;
+int testsFailed = 0;
+int objectCounter = 0;
+
 
 int main (void){
     //test cases
     char *ptr;
     Ref id1, id2, id3, id4, id5;
     testInitPool();
-
     printf("\nTesting typical cases:\n");
-
+    id1 = testInsertObject(100);
+    id2 = testFailInsertObject(100000000000);
+    ptr = (char *)testRetrieveObject(id1);
+    for (int i = 0; i < 100; i++){
+        ptr[i] = (char)(i%26 + 'A');
+    }
+    for (int i = 0; i < 100; i++){
+        fprintf(stdout,"%c",ptr[i]);
+    }
+    printf("\n");
+    ptr = (char *)testFailRetrieveObject(id2);
     printf("\nTesting failed cases:\n");
 
     printf("\nTesting edge cases:\n");
@@ -51,63 +62,100 @@ int main (void){
 void testInitPool(){
     //test method for initPool
     printf("Initializing ObjectManager.\n");
+    initPool();
     testsExecuted++;
 }//end of testInitPool
 
-void testInsertObject(ulong size, Ref *ptr){
+Ref testInsertObject(ulong size){
     //test method for InsertObject
-    printf("Expect SUCCESS: Inserting object size of %lu\n",size);
+    printf("EXPECT SUCCESS: Inserting object size of %lu\n",size);
     testsExecuted++;
+    Ref ptr;
     ptr = insertObject(size);
     if(ptr == NULL_REF){
         printf("FAILED: expected to insert size of %lu, and cannot insert\n", size);
         testsFailed++;
+        return ptr;
     }else{
         printf("SUCCESS: expected to insert size of %lu, and inserted\n", size);
+        objectCounter++;
+        return ptr;
     }
 }//end of testInsertObject
 
-void testFailInsertObject(ulong size, Ref *ptr){
+Ref testFailInsertObject(ulong size){
     //test method for fail InsertObject case
-    printf("Expect FAIL: Inserting object size of %lu\n",size);
+    printf("EXPECT FAIL: Inserting object size of %lu\n",size);
     testsExecuted++;
+    Ref ptr;
     ptr = insertObject(size);
     if(ptr == NULL_REF){
         printf("SUCCESS: expected cannot insert size of %lu, and cannot insert\n", size);
+        return ptr;
     }else{
         printf("FAILED: expected cannot insert size of %lu, and inserted\n", size);
         testsFailed++;
+        objectCounter++;
+        return ptr;
     }
 }//end of testFailInsertObject
 
-void testRetrieveObject(Ref ref, char *ptr){
+void *testRetrieveObject(Ref ref){
     //test method for RetrieveObject
+    printf("EXPECT SUCCESS: retrieving object from reference of %lu\n",ref);
     testsExecuted++;
+    char *ptr;
+    ptr = (char *)retrieveObject(ref);
+    if(ptr == (char *)NULL){
+        printf("FAILED: expected to retrieve the object address of %lu, and cannot retrieve\n", ref);
+        testsFailed++;
+        return NULL;
+    }else{
+        printf("SUCCESS: expected to retrieve the object address of %lu, and retrieved\n", ref);
+        return retrieveObject(ref);
+    }
 }//end of testRetrieveObject
 
-void testFailRetrieveObject(Ref ref, char *ptr){
+void *testFailRetrieveObject(Ref ref){
     //test method for fail RetrieveObject case
+    printf("EXPECT FAIL: retrieving object from reference of %lu\n",ref);
     testsExecuted++;
+    char *ptr;
+    ptr = (char *)retrieveObject(ref);
+    if(ptr == (char *)NULL){
+        printf("SUCCESS: expected cannot retrieve the object address of %lu, and cannot retrieve\n", ref);
+        return NULL;
+    }else{
+        printf("FAILED: expected cannot retrieve the object address of %lu, and retrieved\n", ref);
+        testsFailed++;
+        return retrieveObject(ref);
+    }
 }//end of testFailRetrieveObject
 
 void testAddReference(Ref ref){
     //test method for AddReference
+    printf("TESTING: Adding reference of %lu\n",ref);
+    addReference(ref);
     testsExecuted++;
 }//end of testAddReference
 
 void testDropReference(Ref ref){
     //test method for DropReference
+    printf("TESTING: Dropping reference of %lu\n",ref);
+    dropReference(ref);
     testsExecuted++;
 }//end of testDropReference
 
 void testDestroyPool(){
     //test method for DestroyPool
-    printf("Destroying ObjectManager.\n");
+    printf("TESTING: Destroying ObjectManager.\n");
+    destroyPool();
     testsExecuted++;
 }//end of testDestroyPool
 
 void testDumpPool(){
     //test method for DumpPool
-    printf("Printing out object information.\n");
+    printf("TESTING: Printing out object information.\n");
+    dumpPool();
     testsExecuted++;
 }//end of testDumpPool

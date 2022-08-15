@@ -56,6 +56,8 @@ int main (int argc, char *argv[]){
     printf("\n");
     id4 = testInsertObject(400000);
     id5 = testInsertObject(23888);
+    printf("Objects exists: %d\n",objectCounter);
+    testDumpPool();
     testDropReference(id4);
     objectCounter--;
     testDropReference(id5);
@@ -72,14 +74,26 @@ int main (int argc, char *argv[]){
     testDropReference(id1);
     objectCounter--;
     printf("Objects exists: %d\n",objectCounter);
+    testDumpPool();
     
     printf("\n  Testing failed cases:\n");
     id1 = testFailInsertObject(MEMORY_SIZE+1);
-    
+    id1 = testInsertObject(MEMORY_SIZE);
+    id2 = testFailInsertObject(2);
+    ptr = (char *)testFailRetrieveObject(id2);
+    testDropReference(id2);
+    testAddReference(id2);
+    printf("Objects exists: %d\n",objectCounter);
+    testDumpPool();
+    testDropReference(id1);
+    objectCounter--;
+    printf("Objects exists: %d\n",objectCounter);
+    testDumpPool();
 
     printf("\n  Testing edge cases:\n");
+    
 
-
+    printf("\n");
     testDestroyPool();
     //print the number
     printf("\n\nTotal number of tests executed: %d\n", testsExecuted);

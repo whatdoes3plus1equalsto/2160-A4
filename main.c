@@ -33,6 +33,7 @@ int main (int argc, char *argv[]){
     char *ptr;
     Ref id1, id2, id3, id4, id5;
     testInitPool();
+
     printf("\n  Testing typical cases:\n");
     printf("Objects exists: %d\n",objectCounter);
     id1 = testInsertObject(100);
@@ -77,6 +78,8 @@ int main (int argc, char *argv[]){
     testDumpPool();
     
     printf("\n  Testing failed cases:\n");
+    printf("Objects exists: %d\n",objectCounter);
+    testDumpPool();
     id1 = testFailInsertObject(MEMORY_SIZE+1);
     id1 = testInsertObject(MEMORY_SIZE);
     id2 = testFailInsertObject(2);
@@ -91,8 +94,34 @@ int main (int argc, char *argv[]){
     testDumpPool();
 
     printf("\n  Testing edge cases:\n");
+    printf("Objects exists: %d\n",objectCounter);
+    testDumpPool();
+    //rapidly insert and write objects then drop reference
+    for(int i = 0;i<20;i++){
+        id2 = testInsertObject(MEMORY_SIZE/10);
+        ptr = (char *)testRetrieveObject(id2);
+        ptr[0] = (char)('A');
+        testDropReference(id2);
+        objectCounter--;
+    }
+    //memory leak case
+    id1 = testInsertObject(100);
+    id1 = testInsertObject(1000);
+    testDropReference(id1);
+    objectCounter--;
+    testDropReference(id1);
+    printf("Objects exists: %d\n",objectCounter);
+    testDumpPool();
+    //dropReference on a dropped object
+    printf("Objects exists: %d\n",objectCounter);
+    testDumpPool();
+    id3 = testInsertObject(100);
+    testDropReference(id3);
+    objectCounter--;
+    testDropReference(id3);
+    printf("Objects exists: %d\n",objectCounter);
+    testDumpPool();
     
-
     printf("\n");
     testDestroyPool();
     //print the number

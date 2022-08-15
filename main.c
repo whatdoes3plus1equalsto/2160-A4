@@ -28,15 +28,16 @@ int testsFailed = 0;
 int objectCounter = 0;
 
 
-int main (void){
+int main (int argc, char *argv[]){
     //test cases
     char *ptr;
     Ref id1, id2, id3, id4, id5;
     testInitPool();
-    printf("\nTesting typical cases:\n");
+    printf("\n  Testing typical cases:\n");
+    printf("Objects exists: %d\n",objectCounter);
     id1 = testInsertObject(100);
-    id2 = testFailInsertObject(100000000000);
-    ptr = (char *)testRetrieveObject(id1);
+    id2 = testInsertObject(300);
+    ptr = (char*)retrieveObject(id1);
     for (int i = 0; i < 100; i++){
         ptr[i] = (char)(i%26 + 'A');
     }
@@ -44,10 +45,39 @@ int main (void){
         fprintf(stdout,"%c",ptr[i]);
     }
     printf("\n");
-    ptr = (char *)testFailRetrieveObject(id2);
-    printf("\nTesting failed cases:\n");
+    id3 = testInsertObject(100000);
+    ptr = (char*)retrieveObject(id2);
+    for (int i = 0; i < 200; i++){
+        ptr[i] = (char)(i%26 + 'Z');
+    }
+    for (int i = 0; i < 200; i++){
+        fprintf(stdout,"%c",ptr[i]);
+    }
+    printf("\n");
+    id4 = testInsertObject(400000);
+    id5 = testInsertObject(23888);
+    testDropReference(id4);
+    objectCounter--;
+    testDropReference(id5);
+    objectCounter--;
+    testDropReference(id3);
+    objectCounter--;
+    testDropReference(id2);
+    objectCounter--;
+    id2 = testInsertObject(100);
+    testAddReference(id2);
+    testDropReference(id2);
+    testDropReference(id2);
+    objectCounter--;
+    testDropReference(id1);
+    objectCounter--;
+    printf("Objects exists: %d\n",objectCounter);
+    
+    printf("\n  Testing failed cases:\n");
+    id1 = testFailInsertObject(MEMORY_SIZE+1);
+    
 
-    printf("\nTesting edge cases:\n");
+    printf("\n  Testing edge cases:\n");
 
 
     testDestroyPool();

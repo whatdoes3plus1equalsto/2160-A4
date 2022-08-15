@@ -63,7 +63,6 @@ static void validate(){
         
         while(curr->next != NULL){
             counter ++;
-            //printf("%d\n",curr->numBytes); //delete
             assert(curr->numBytes <= MEMORY_SIZE);
             curr = curr->next;
         }
